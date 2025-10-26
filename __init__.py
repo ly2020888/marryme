@@ -445,10 +445,16 @@ async def handle_have_baby(
         if not started:
             await have_baby_cmd.finish("❌ 生宝宝过程已经开始，请勿重复操作！")
             return
+
         # 发送开始消息
+        spouse_name = (
+            marriage["target_name"]
+            if marriage["proposer_id"] == user_id
+            else marriage["proposer_name"]
+        )
         start_msg = MessageSegment.text(
-            f"正在努力生宝宝中...请等待 {random_duration // 60} 分钟..."
-        ) + MessageSegment.at(spouse_id)
+            f"正在努力生宝宝中...请等待 {random_duration // 60} 分钟...\n对象: {spouse_name}"
+        )
         await have_baby_cmd.send(start_msg)
 
     except Exception as e:
