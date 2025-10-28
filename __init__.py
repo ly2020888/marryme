@@ -379,11 +379,77 @@ async def shutdown_scheduler():
 having_baby_users = {}
 
 
+def check_time_restriction(
+    allowed_start_hour=21, allowed_end_hour=5, bypass_chance=0.1, command_name="爱爱"
+):
+    """
+    检查时间限制，有概率可以绕过限制
+
+    Args:
+        allowed_start_hour: 允许开始的小时 (默认21)
+        allowed_end_hour: 允许结束的小时 (默认5)
+        bypass_chance: 绕过限制的概率 (默认0.1)
+        command_name: 命令名称，用于提示消息
+
+    Returns:
+        tuple: (是否允许, 提示消息)
+    """
+    import datetime
+    import random
+
+    # 获取当前时间
+    now = datetime.datetime.now()
+    current_hour = now.hour
+
+    # 检查是否在允许的时间段内
+    if allowed_start_hour <= allowed_end_hour:
+        # 正常时间段，如 10点-18点
+        in_allowed_time = allowed_start_hour <= current_hour < allowed_end_hour
+    else:
+        # 跨天时间段，如 21点-5点
+        in_allowed_time = (
+            allowed_start_hour <= current_hour <= 23
+            or 0 <= current_hour < allowed_end_hour
+        )
+
+    # 如果在允许时间段内，直接允许
+    if in_allowed_time:
+        return True, None
+
+    # 不在允许时间段，检查是否有概率绕过
+    if random.random() <= bypass_chance:
+        return True, ""
+    else:
+        tips = [
+            f"夜深人静的时候才能{command_name}哦~",
+            f"现在不是{command_name}的好时机呢，等夜幕降临再来吧~",
+            f"请晚上{allowed_start_hour}点至凌晨{allowed_end_hour}点之间再来{command_name}~夜晚才是缠绵的好时光",
+            f"虽然现在不是时候，但也许下次运气会更好呢~晚上来试试吧",
+            f"{command_name}的时间还没到哦，晚上{allowed_start_hour}点后再来深入交流吧~",
+            f"爱爱需要休息，请晚上{allowed_start_hour}点后再来{command_name}~养精蓄锐才能更持久",
+            f"夜晚才是{command_name}的最佳时机哦~等天黑了再来吧",
+            f"这种私密的事情，当然要在被窝里悄悄进行啦~晚上再来吧",
+            f"这种亲密接触，当然要在浪漫的夜晚进行啦~",
+        ]
+        return False, random.choice(tips)
+
+
 @have_baby_cmd.handle()
 async def handle_have_baby(
     bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()
 ):
     """处理生宝宝"""
+
+    is_allowed, tip_message = check_time_restriction(
+        allowed_start_hour=21,
+        allowed_end_hour=5,
+        bypass_chance=0.1,
+        command_name="爱爱",
+    )
+
+    if not is_allowed:
+        await have_baby_cmd.finish(tip_message)
+
     user_id = str(event.user_id)
     group_id = str(event.group_id)
 
