@@ -380,7 +380,7 @@ having_baby_users = {}
 
 
 def check_time_restriction(
-    allowed_start_hour=21, allowed_end_hour=5, bypass_chance=0.1, command_name="爱爱"
+    allowed_start_hour=21, allowed_end_hour=5, bypass_chance=0.01, command_name="爱爱"
 ):
     """
     检查时间限制，有概率可以绕过限制
