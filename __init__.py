@@ -660,37 +660,24 @@ async def handle_preference(event: Event, args: Message = CommandArg()):
 
     if preference == "不结婚":
         # 设置不允许结婚
-        await marriage_manager.set_user_preference(
-            user_id=user_id,
-            user_name=user_name,
-            group_id=group_id,
-            allow_marriage=False,
-        )
+        await marriage_manager.set_user_preference(user_id, user_name, group_id)
         await preference_cmd.finish("已设置：拒绝所有结婚请求")
 
     elif preference == "不生宝宝":
         # 设置不允许生宝宝
-        await marriage_manager.set_user_preference(
-            user_id=user_id, user_name=user_name, group_id=group_id, allow_baby=False
-        )
+        await marriage_manager.set_user_preference(user_id, user_name, group_id)
         await preference_cmd.finish("已设置：拒绝生宝宝")
 
     elif preference == "恢复全部":
         # 恢复所有设置
-        await marriage_manager.set_user_preference(
-            user_id=user_id,
-            user_name=user_name,
-            group_id=group_id,
-            allow_marriage=True,
-            allow_baby=True,
-        )
+        await marriage_manager.set_user_preference(user_id, user_name, group_id)
         await preference_cmd.finish("已恢复：允许结婚和生宝宝")
 
     elif preference == "状态":
         # 查看当前状态
         pref = await marriage_manager.get_user_preference(user_id, group_id)
         if pref:
-            status = f"当前偏好设置：\n结婚：{'允许' if pref.allow_marriage else '拒绝'}\n生宝宝：{'允许' if pref.allow_baby else '拒绝'}"
+            status = f"当前偏好设置：\n结婚：{'允许' if pref['allow_marriage'] else '拒绝'}\n生宝宝：{'允许' if pref['allow_baby'] else '拒绝'}"
         else:
             status = "当前偏好设置：默认（允许结婚和生宝宝）"
         await preference_cmd.finish(status)
