@@ -454,7 +454,7 @@ async def handle_have_baby(
     """处理生宝宝"""
 
     is_allowed, tip_message = check_time_restriction(
-        allowed_start_hour=21,
+        allowed_start_hour=18,
         allowed_end_hour=5,
         bypass_chance=0.1,
         command_name="爱爱",
