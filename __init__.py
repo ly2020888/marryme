@@ -72,8 +72,10 @@ async def handle_marry(
         await marry_cmd.finish("你不能和自己结婚哦！")
 
     target_pref = await marriage_manager.get_user_preference(target_id, group_id)
-    if target_pref["allow_marriage"] is False:
-        return
+    if target_pref and target_pref["allow_marriage"] is False:
+        await marry_cmd.finish(
+            f"{target_pref.get('user_name', '对方')}设置了不允许结婚"
+        )
 
     # # 检查是否已有婚姻
     # existing_marriage = await marriage_manager.get_user_marriage(str(event.user_id))
@@ -472,8 +474,10 @@ async def handle_have_baby(
         spouse_id = at_users[0] if at_users else None
 
         target_pref = await marriage_manager.get_user_preference(spouse_id, group_id)
-        if target_pref["allow_baby"] is False:
-            return
+        if target_pref and target_pref["allow_baby"] is False:
+            await marry_cmd.finish(
+                f"{target_pref.get('user_name', '对方')}设置了不允许生宝宝"
+            )
 
         if spouse_id:
             # 如果有@对象，检查是否与该对象有婚姻关系
