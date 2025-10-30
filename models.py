@@ -1,12 +1,14 @@
 from nonebot_plugin_orm import Model
-from sqlalchemy import Column, String, DateTime, Integer
+from sqlalchemy import Boolean, Column, String, DateTime, Integer
 from datetime import datetime
+
 
 # 定义数据模型
 class MarriageRequest(Model):
     """结婚请求表"""
+
     __tablename__ = "marriage_requests"
-    
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     request_id = Column(String(100), unique=True, nullable=False, index=True)
     proposer_id = Column(String(100), nullable=False, index=True)
@@ -15,8 +17,10 @@ class MarriageRequest(Model):
     target_name = Column(String(100))
     group_id = Column(String(100), nullable=False, index=True)
     created_at = Column(DateTime, default=datetime.now)
-    status = Column(String(20), default="pending")  # pending, accepted, rejected, expired
-    
+    status = Column(
+        String(20), default="pending"
+    )  # pending, accepted, rejected, expired
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -26,14 +30,20 @@ class MarriageRequest(Model):
             "target_id": self.target_id,
             "target_name": self.target_name,
             "group_id": self.group_id,
-            "created_at": self.created_at.isoformat() if hasattr(self.created_at, 'isoformat') else self.created_at,
-            "status": self.status
+            "created_at": (
+                self.created_at.isoformat()
+                if hasattr(self.created_at, "isoformat")
+                else self.created_at
+            ),
+            "status": self.status,
         }
+
 
 class Marriage(Model):
     """婚姻关系表"""
+
     __tablename__ = "marriages"
-    
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     marriage_id = Column(String(100), unique=True, nullable=False, index=True)
     proposer_id = Column(String(100), nullable=False, index=True)
@@ -43,7 +53,7 @@ class Marriage(Model):
     group_id = Column(String(100), nullable=False, index=True)
     married_at = Column(DateTime, default=datetime.now)
     status = Column(String(20), default="married")  # married, divorced
-    
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -53,24 +63,30 @@ class Marriage(Model):
             "target_id": self.target_id,
             "target_name": self.target_name,
             "group_id": self.group_id,
-            "married_at": self.married_at.isoformat() if hasattr(self.married_at, 'isoformat') else self.married_at,
-            "status": self.status
+            "married_at": (
+                self.married_at.isoformat()
+                if hasattr(self.married_at, "isoformat")
+                else self.married_at
+            ),
+            "status": self.status,
         }
+
 
 class BabyRecord(Model):
     """宝宝记录表"""
+
     __tablename__ = "baby_records"
-    
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     marriage_id = Column(String(100), nullable=False, index=True)  # 关联的婚姻ID
-    parent1_id = Column(String(100), nullable=False, index=True)   # 父母ID1
+    parent1_id = Column(String(100), nullable=False, index=True)  # 父母ID1
     parent1_name = Column(String(100))
-    parent2_id = Column(String(100), nullable=False, index=True)   # 父母ID2  
+    parent2_id = Column(String(100), nullable=False, index=True)  # 父母ID2
     parent2_name = Column(String(100))
     baby_count = Column(Integer, default=1)  # 生的宝宝数量
     created_at = Column(DateTime, default=datetime.now)
-    group_id = Column(String(100), nullable=False, index=True)     # 群组ID
-    
+    group_id = Column(String(100), nullable=False, index=True)  # 群组ID
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -80,6 +96,45 @@ class BabyRecord(Model):
             "parent2_id": self.parent2_id,
             "parent2_name": self.parent2_name,
             "baby_count": self.baby_count,
-            "created_at": self.created_at.isoformat() if hasattr(self.created_at, 'isoformat') else self.created_at,
-            "group_id": self.group_id
+            "created_at": (
+                self.created_at.isoformat()
+                if hasattr(self.created_at, "isoformat")
+                else self.created_at
+            ),
+            "group_id": self.group_id,
+        }
+
+
+class UserPreference(Model):
+    """用户偏好设置表"""
+
+    __tablename__ = "user_preferences"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String(100), nullable=False, index=True)
+    user_name = Column(String(100))
+    group_id = Column(String(100), nullable=False, index=True)
+    allow_marriage = Column(Boolean, default=True)  # 是否允许结婚
+    allow_baby = Column(Boolean, default=True)  # 是否允许生宝宝
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "user_name": self.user_name,
+            "group_id": self.group_id,
+            "allow_marriage": self.allow_marriage,
+            "allow_baby": self.allow_baby,
+            "created_at": (
+                self.created_at.isoformat()
+                if hasattr(self.created_at, "isoformat")
+                else self.created_at
+            ),
+            "updated_at": (
+                self.updated_at.isoformat()
+                if hasattr(self.updated_at, "isoformat")
+                else self.updated_at
+            ),
         }
