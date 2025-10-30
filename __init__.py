@@ -666,12 +666,16 @@ async def handle_preference(event: Event, args: Message = CommandArg()):
 
     if preference == "不结婚":
         # 设置不允许结婚
-        await marriage_manager.set_user_preference(user_id, user_name, group_id)
+        await marriage_manager.set_user_preference(
+            user_id, user_name, group_id, False, False
+        )
         await preference_cmd.finish("已设置：拒绝所有结婚请求")
 
     elif preference == "不生宝宝":
         # 设置不允许生宝宝
-        await marriage_manager.set_user_preference(user_id, user_name, group_id)
+        await marriage_manager.set_user_preference(
+            user_id, user_name, group_id, True, False
+        )
         await preference_cmd.finish("已设置：拒绝生宝宝")
 
     elif preference == "恢复全部":
