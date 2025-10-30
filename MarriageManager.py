@@ -456,6 +456,7 @@ class MarriageManager:
             return [record.to_dict() for record in records]
 
     async def set_user_preference(
+        self,
         user_id: str,
         user_name: str,
         group_id: str,
@@ -491,7 +492,7 @@ class MarriageManager:
 
             await session.commit()
 
-    async def get_user_preference(user_id: str, group_id: str) -> dict:
+    async def get_user_preference(self, user_id: str, group_id: str) -> dict:
         """获取用户偏好"""
         from sqlalchemy import select
 
