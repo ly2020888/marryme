@@ -305,7 +305,7 @@ class MarriageManager:
             existing_requests = result.scalars().all()
 
             # 如果今天已经有求婚记录，返回False
-            return len(existing_requests) == 0
+            return len(existing_requests) <= 3
 
     async def have_baby(self, user_id: str, group_id: str, baby_count: int = 1) -> dict:
         """生宝宝"""
