@@ -194,12 +194,17 @@ class MarriageManager:
             marriages = result.scalars().all()
             return [marriage.to_dict() for marriage in marriages]
 
-    async def divorce(self, user_id: str) -> bool:
-        """离婚"""
+    async def divorce_with_spouse(self, user_id: str, spouse_id: str) -> bool:
+        """与指定配偶离婚"""
         session = get_session()
         async with session.begin():
             stmt = select(Marriage).where(
-                (Marriage.proposer_id == user_id) | (Marriage.target_id == user_id),
+                (
+                    (Marriage.proposer_id == user_id)
+                    & (Marriage.target_id == spouse_id)
+                    | (Marriage.proposer_id == spouse_id)
+                    & (Marriage.target_id == user_id)
+                ),
                 Marriage.status == "married",
             )
             result = await session.execute(stmt)

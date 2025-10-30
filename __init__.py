@@ -26,7 +26,9 @@ reject_cmd = on_command(
 check_marriage_cmd = on_command(
     "婚姻状态", aliases={"查看婚姻", "marriage", "我的婚姻"}, priority=10, block=True
 )
-# divorce_cmd = on_command("离婚", aliases={"分手", "分手吧","离婚吧"}, priority=10, block=True)
+divorce_cmd = on_command(
+    "离婚", aliases={"分手", "分手吧", "离婚吧"}, priority=10, block=True
+)
 have_baby_cmd = on_command(
     "生宝宝",
     aliases={"生孩子", "生娃", "baby", "做爱", "爱爱", "sex", "sox"},
@@ -690,3 +692,70 @@ async def handle_preference(event: Event, args: Message = CommandArg()):
         await preference_cmd.finish(
             "未知选项，请使用：不结婚 / 不生宝宝 / 恢复全部 / 状态"
         )
+
+
+@divorce_cmd.handle()
+async def handle_marry(
+    event: GroupMessageEvent,
+    interface: QryItrface = None,
+    args: Message = CommandArg(),
+):
+    """处理离婚请求"""
+    # 获取消息中的at对象
+    user_id = str(event.user_id)
+
+    # 解析@的用户
+    at_targets = [
+        str(seg.data["qq"]) for seg in args if seg.type == "at" and seg.data.get("qq")
+    ]
+
+    if not at_targets:
+        await divorce_cmd.finish("请@你想要离婚的对象！")
+
+    target_id = at_targets[0]
+    user_id = str(event.user_id)
+
+    # 检查是否和自己离婚
+    if target_id == user_id:
+        return
+
+    # 获取用户信息
+    members = await interface.get_members(SceneType.GROUP, str(event.group_id))
+
+    user_info = next((m.user for m in members if m.user.id == user_id), None)
+    target_info = next((m.user for m in members if m.user.id == target_id), None)
+
+    if not target_info:
+        await divorce_cmd.finish("未在群聊中找到指定的用户！请确认@的是正确的群成员。")
+
+    # 获取昵称
+    user_name = user_info.nick or user_info.name or "未知用户"
+    target_name = target_info.nick or target_info.name or "未知用户"
+
+    # 执行离婚
+    success = await marriage_manager.divorce_with_spouse(user_id, target_id)
+    if success:
+        # 随机选择悲情离婚消息
+        divorce_messages = [
+            f"爱情终究没抵得过时间，{user_name}和{target_name}离婚了。",
+            f"也许分开对彼此都好，{user_name}和{target_name}的离婚手续办完了。",
+            f"故事的最后，{user_name}和{target_name}还是说了再见。",
+            f"曾经的美好就留在回忆里吧，{user_name}和{target_name}离婚登记已完成。",
+            f"不是不爱了，只是路不同了。{user_name}和{target_name}分开了。",
+            f"有些人注定只能陪你走一段路，{user_name}和{target_name}离婚手续已办妥。",
+            f"感情走到了尽头，{user_name}和{target_name}好聚好散吧。",
+            f"从今往后，{user_name}和{target_name}就是最熟悉的陌生人。",
+            f"也许放手才是最好的选择，{user_name}和{target_name}离婚了。",
+            f"爱情像沙漏，握得越紧流失得越快。{user_name}和{target_name}离婚了。",
+            f"没有谁对谁错，只是{user_name}和{target_name}的缘分尽了。",
+            f"谢谢你陪我走过这段路，{user_name}对{target_name}说再见了。",
+            f"感情这种事，强求不来。{user_name}和{target_name}离婚手续已完成。",
+            f"{user_name}和{target_name}都该开始新的生活了，离婚登记办妥。",
+            f"有些爱，只能止于唇齿，掩于岁月。{user_name}和{target_name}分开了。",
+        ]
+        import random
+
+        message = random.choice(divorce_messages)
+        await divorce_cmd.finish(message)
+    else:
+        await divorce_cmd.finish("离婚失败，请稍后再试！")
