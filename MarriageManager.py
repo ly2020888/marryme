@@ -6,6 +6,8 @@ from typing import List, Optional
 
 from .SessionManager import BabyProcessManager
 from .models import BabyRecord, MarriageRequest, Marriage
+from .models import UserPreference
+
 from nonebot.adapters.onebot.v11 import MessageSegment
 from loguru import logger
 
@@ -452,3 +454,51 @@ class MarriageManager:
             result = await session.execute(stmt)
             records = result.scalars().all()
             return [record.to_dict() for record in records]
+
+    async def set_user_preference(
+        user_id: str,
+        user_name: str,
+        group_id: str,
+        allow_marriage: bool = True,
+        allow_baby: bool = True,
+    ):
+        """设置用户偏好"""
+        from sqlalchemy import select
+
+        session = get_session()
+        async with session.begin():
+            # 查找现有记录
+            stmt = select(UserPreference).where(
+                UserPreference.user_id == user_id, UserPreference.group_id == group_id
+            )
+            result = await session.scalar(stmt)
+
+            if result:
+                # 更新现有记录
+                result.allow_marriage = allow_marriage
+                result.allow_baby = allow_baby
+                result.updated_at = datetime.now()
+            else:
+                # 创建新记录
+                preference = UserPreference(
+                    user_id=user_id,
+                    user_name=user_name,
+                    group_id=group_id,
+                    allow_marriage=allow_marriage,
+                    allow_baby=allow_baby,
+                )
+                session.add(preference)
+
+            await session.commit()
+
+    async def get_user_preference(user_id: str, group_id: str) -> dict:
+        """获取用户偏好"""
+        from sqlalchemy import select
+
+        session = get_session()
+        async with session.begin():
+            stmt = select(UserPreference).where(
+                UserPreference.user_id == user_id, UserPreference.group_id == group_id
+            )
+            record = await session.scalar(stmt)
+            return record.to_dict() if record else None

@@ -9,7 +9,6 @@ from nonebot_plugin_uninfo import SceneType, Session, UniSession, QryItrface
 import asyncio
 from datetime import datetime, timedelta
 
-from .models import UserPreference
 from .MarriageManager import MarriageManager
 from loguru import logger
 
@@ -72,7 +71,7 @@ async def handle_marry(
     if target_id == str(event.user_id):
         await marry_cmd.finish("你不能和自己结婚哦！")
 
-    target_pref = await get_user_preference(target_id, group_id)
+    target_pref = await marriage_manager.get_user_preference(target_id, group_id)
     if target_pref["allow_marriage"] is False:
         return
 
@@ -472,7 +471,7 @@ async def handle_have_baby(
         # 获取配偶ID
         spouse_id = at_users[0] if at_users else None
 
-        target_pref = await get_user_preference(spouse_id, group_id)
+        target_pref = await marriage_manager.get_user_preference(spouse_id, group_id)
         if target_pref["allow_baby"] is False:
             return
 
@@ -661,24 +660,28 @@ async def handle_preference(event: Event, args: Message = CommandArg()):
 
     if preference == "不结婚":
         # 设置不允许结婚
-        await set_user_preference(user_id, user_name, group_id, allow_marriage=False)
+        await marriage_manager.set_user_preference(
+            user_id, user_name, group_id, allow_marriage=False
+        )
         await preference_cmd.finish("已设置：拒绝所有结婚请求")
 
     elif preference == "不生宝宝":
         # 设置不允许生宝宝
-        await set_user_preference(user_id, user_name, group_id, allow_baby=False)
+        await marriage_manager.set_user_preference(
+            user_id, user_name, group_id, allow_baby=False
+        )
         await preference_cmd.finish("已设置：拒绝生宝宝")
 
     elif preference == "恢复全部":
         # 恢复所有设置
-        await set_user_preference(
+        await marriage_manager.set_user_preference(
             user_id, user_name, group_id, allow_marriage=True, allow_baby=True
         )
         await preference_cmd.finish("已恢复：允许结婚和生宝宝")
 
     elif preference == "状态":
         # 查看当前状态
-        pref = await get_user_preference(user_id, group_id)
+        pref = await marriage_manager.get_user_preference(user_id, group_id)
         if pref:
             status = f"当前偏好设置：\n结婚：{'允许' if pref.allow_marriage else '拒绝'}\n生宝宝：{'允许' if pref.allow_baby else '拒绝'}"
         else:
@@ -689,53 +692,3 @@ async def handle_preference(event: Event, args: Message = CommandArg()):
         await preference_cmd.finish(
             "未知选项，请使用：不结婚 / 不生宝宝 / 恢复全部 / 状态"
         )
-
-
-async def set_user_preference(
-    user_id: str,
-    user_name: str,
-    group_id: str,
-    allow_marriage: bool = True,
-    allow_baby: bool = True,
-):
-    """设置用户偏好"""
-    from nonebot_plugin_orm import async_session
-    from sqlalchemy import select
-
-    async with async_session() as session:
-        # 查找现有记录
-        stmt = select(UserPreference).where(
-            UserPreference.user_id == user_id, UserPreference.group_id == group_id
-        )
-        result = await session.scalar(stmt)
-
-        if result:
-            # 更新现有记录
-            result.allow_marriage = allow_marriage
-            result.allow_baby = allow_baby
-            result.updated_at = datetime.now()
-        else:
-            # 创建新记录
-            preference = UserPreference(
-                user_id=user_id,
-                user_name=user_name,
-                group_id=group_id,
-                allow_marriage=allow_marriage,
-                allow_baby=allow_baby,
-            )
-            session.add(preference)
-
-        await session.commit()
-
-
-async def get_user_preference(user_id: str, group_id: str) -> dict:
-    """获取用户偏好"""
-    from nonebot_plugin_orm import async_session
-    from sqlalchemy import select
-
-    async with async_session() as session:
-        stmt = select(UserPreference).where(
-            UserPreference.user_id == user_id, UserPreference.group_id == group_id
-        )
-        record = await session.scalar(stmt)
-        return record.to_dict() if record else None
