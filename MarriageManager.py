@@ -390,23 +390,55 @@ class MarriageManager:
                 parent2_id = marriage.proposer_id
                 parent2_name = marriage.proposer_name
 
-            # 创建宝宝记录
-            baby_record = BabyRecord(
-                marriage_id=marriage.marriage_id,
-                parent1_id=parent1_id,
-                parent1_name=parent1_name,
-                parent2_id=parent2_id,
-                parent2_name=parent2_name,
-                baby_count=baby_count,
-                group_id=group_id,
+            # 查找这对夫妻的宝宝记录
+            baby_stmt = (
+                select(BabyRecord)
+                .where(
+                    (
+                        (BabyRecord.parent1_id == user_id)
+                        & (BabyRecord.parent2_id == spouse_id)
+                    )
+                    | (
+                        (BabyRecord.parent1_id == spouse_id)
+                        & (BabyRecord.parent2_id == user_id)
+                    )
+                )
+                .order_by(BabyRecord.created_at)
             )
-            session.add(baby_record)
+
+            baby_result = await session.execute(baby_stmt)
+            baby_records = baby_result.scalars().all()
+
+            if baby_records:
+                # 总是使用最早创建的记录进行更新（作为主记录）
+                main_baby_record = baby_records[0]
+                main_baby_record.baby_count += baby_count
+                # 更新父母信息到主记录
+                main_baby_record.parent1_name = parent1_name
+                main_baby_record.parent2_name = parent2_name
+                # 更新群组信息（使用最新的群组）
+                main_baby_record.group_id = group_id
+            else:
+                # 如果没有记录，创建新记录
+                main_baby_record = BabyRecord(
+                    marriage_id=marriage.marriage_id,
+                    parent1_id=parent1_id,
+                    parent1_name=parent1_name,
+                    parent2_id=parent2_id,
+                    parent2_name=parent2_name,
+                    baby_count=baby_count,
+                    group_id=group_id,
+                )
+                session.add(main_baby_record)
+
+            # 获取总宝宝数量（使用你的现有方法）
+            total_babies = await self.get_total_babies(user_id, spouse_id)
 
             return {
                 "parent1_name": parent1_name,
                 "parent2_name": parent2_name,
                 "baby_count": baby_count,
-                "total_babies": await self.get_total_babies(user_id, spouse_id),
+                "total_babies": total_babies,
             }
 
     async def get_total_babies(self, user_id: str, spouse_id: str = None) -> int:
