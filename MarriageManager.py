@@ -1,7 +1,7 @@
 import aiohttp
 from nonebot_plugin_orm import get_session
 from sqlalchemy import func, select, delete, update
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from .SessionManager import BabyProcessManager
@@ -418,6 +418,7 @@ class MarriageManager:
                 main_baby_record.parent2_name = parent2_name
                 # 更新群组信息（使用最新的群组）
                 main_baby_record.group_id = group_id
+                main_baby_record.created_at = datetime.now(timezone.utc)
             else:
                 # 如果没有记录，创建新记录
                 main_baby_record = BabyRecord(
