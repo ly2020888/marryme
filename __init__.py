@@ -80,13 +80,12 @@ async def handle_marry(
         )
 
     # # 检查是否已有婚姻
-    # existing_marriage = await marriage_manager.get_user_marriage(str(event.user_id))
-    # if existing_marriage:
-    #     await marry_cmd.finish("你已经结过婚了！")
-
-    # target_marriage = await marriage_manager.get_user_marriage(target_id)
-    # if target_marriage:
-    #     await marry_cmd.finish("对方已经结过婚了！")
+    existing_marriage = await marriage_manager.get_user_marriage(
+        str(event.user_id), target_id
+    )
+    if existing_marriage:
+        await marry_cmd.finish("❌ 你已经和TA结过婚了哦！")
+        return
 
     # 获取用户信息
     try:
@@ -237,22 +236,22 @@ async def handle_accept(
         )
 
     # 拒绝其他所有请求
-    try:
-        reject_count = 0
-        for request in pending_requests:
-            if request["request_id"] != selected_request["request_id"]:
-                logger.debug(
-                    f"拒绝其他请求: {request['proposer_name']}({request['proposer_id']})"
-                )
-                await marriage_manager.reject_marriage_request(request["request_id"])
-                reject_count += 1
+    # try:
+    #     reject_count = 0
+    #     for request in pending_requests:
+    #         if request["request_id"] != selected_request["request_id"]:
+    #             logger.debug(
+    #                 f"拒绝其他请求: {request['proposer_name']}({request['proposer_id']})"
+    #             )
+    #             await marriage_manager.reject_marriage_request(request["request_id"])
+    #             reject_count += 1
 
-        logger.info(f"成功拒绝了 {reject_count} 个其他求婚请求")
+    #     logger.info(f"成功拒绝了 {reject_count} 个其他求婚请求")
 
-    except Exception as e:
-        logger.error(f"拒绝其他请求时发生错误: {e}", exc_info=True)
-        await accept_cmd.finish("❌ 处理其他请求时出现错误")
-        return
+    # except Exception as e:
+    #     logger.error(f"拒绝其他请求时发生错误: {e}", exc_info=True)
+    #     await accept_cmd.finish("❌ 处理其他请求时出现错误")
+    #     return
 
     # 接受选中的请求
     try:

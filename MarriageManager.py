@@ -120,16 +120,6 @@ class MarriageManager:
             if not request:
                 return False
 
-            # 检查双方是否已有婚姻
-            # existing_marriage = await self.get_user_marriage(request.proposer_id) or await self.get_user_marriage(request.target_id)
-            # if existing_marriage:
-            #     # 更新请求状态为拒绝
-            #     stmt = update(MarriageRequest).where(
-            #         MarriageRequest.request_id == request_id
-            #     ).values(status="rejected")
-            #     await session.execute(stmt)
-            #     return False
-
             # 创建婚姻记录
             marriage_id = f"marriage_{request.proposer_id}_{request.target_id}"
             marriage = Marriage(
@@ -170,17 +160,22 @@ class MarriageManager:
             result = await session.execute(stmt)
             return result.rowcount > 0
 
-    async def get_user_marriage(self, user_id: str) -> Optional[dict]:
+    async def get_user_marriage(self, user_id: str, spouse_id: str) -> Optional[dict]:
         """获取用户的婚姻关系"""
         session = get_session()
         async with session.begin():
             stmt = select(Marriage).where(
-                (Marriage.proposer_id == user_id) | (Marriage.target_id == user_id),
+                (
+                    (Marriage.proposer_id == user_id)
+                    & (Marriage.target_id == spouse_id)
+                    | (Marriage.proposer_id == spouse_id)
+                    & (Marriage.target_id == user_id)
+                ),
                 Marriage.status == "married",
             )
             result = await session.execute(stmt)
-            request = result.scalar_one_or_none()
-            return request.to_dict() if request else None
+            marriage = result.scalar_one_or_none()
+            return marriage.to_dict() if marriage else None
 
     async def get_user_marriages(self, user_id: str) -> List[dict]:
         """获取用户的所有婚姻关系"""
