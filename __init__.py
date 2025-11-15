@@ -267,7 +267,7 @@ async def handle_accept(
             await send_marriage_success_message(selected_request, event)
         else:
             logger.error(f"接受求婚请求失败，请求ID: {selected_request['request_id']}")
-            await accept_cmd.finish("❌ 处理求婚请求时出现错误")
+            await accept_cmd.finish("❌ 你们已经结过婚了！")
 
     except Exception as e:
         logger.error(f"接受求婚请求时发生错误: {e}", exc_info=True)

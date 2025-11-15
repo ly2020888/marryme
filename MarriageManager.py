@@ -120,6 +120,21 @@ class MarriageManager:
             if not request:
                 return False
 
+            # 检查双方是否已有婚姻
+            existing_marriage = await self.get_user_marriage(
+                request.target_id, request.proposer_id
+            )
+
+            if existing_marriage:
+                # 更新请求状态为拒绝
+                stmt = (
+                    update(MarriageRequest)
+                    .where(MarriageRequest.request_id == request_id)
+                    .values(status="rejected")
+                )
+                await session.execute(stmt)
+                return False
+
             # 创建婚姻记录
             marriage_id = f"marriage_{request.proposer_id}_{request.target_id}"
             marriage = Marriage(
